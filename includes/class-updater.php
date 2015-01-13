@@ -26,8 +26,6 @@ class Layers_Updater {
 
     public function __construct() {
 
-        require_once( 'class-options-panel.php' );
-
         // Add the administrator menu
         add_action( 'admin_init', array( $this, 'add_settings' ) );
 
