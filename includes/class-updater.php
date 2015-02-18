@@ -6,9 +6,10 @@
  * @package Layers
  * @since Layers 1.0
  */
+
 class Layers_Updater {
 
-    const LAYERS_API_REMOTE_URL = 'vagrant.localhost/api/v1';
+    const LAYERS_API_REMOTE_URL = 'oboxthemes.com';
 
     private static $instance;
 
@@ -25,12 +26,6 @@ class Layers_Updater {
     */
 
     public function __construct() {
-
-        // Add the administrator menu
-        add_action( 'admin_init', array( $this, 'add_settings' ) );
-
-        // Save API key
-        add_action( 'init' , array( $this, 'save_api_key' ) );
 
         // Theme and Plugin Update Checkers
         add_filter( 'pre_set_site_transient_update_themes', array( $this, 'transient_theme_updates' ) );
@@ -60,6 +55,7 @@ class Layers_Updater {
     *  Add the Options Panel class
     */
     public function add_settings() {
+
         add_settings_section(
             'layers_update_section',
             __( 'Layers Automatic Update Settings', LAYERS_UPDATER_SLUG ),
@@ -133,6 +129,8 @@ class Layers_Updater {
 
         // Get data
         $response = $this->_do_api_call( 'updates', $this->_get_api_key(), true );
+
+        die( print_r( $response , true ) );
 
         // If the response is not successful do nothing, just return; @TODO: Add a messaging system hook in
         if( NULL == $response ) return;
