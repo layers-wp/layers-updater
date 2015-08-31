@@ -1,14 +1,14 @@
 <?php /*
  * Plugin Name: Layers - Updater
- * Version: 1.0-beta
+ * Version: 1.0.0
  * Plugin URI: http://www.oboxthemes.com
- * Description: This plugin adds the Layers Updater script
+ * Description: This plugin makes sure that your Layers Themes & Extensions are always up to date
  * Author: Marc Perel
  * Author URI: http://www.oboxthemes.com/
  * Requires at least: 4.0
  * Tested up to: 4.0
  *
- * Text Domain: layer-updater
+ * Text Domain: layers-updater
  * Domain Path: /lang/
  *
  * @package WordPress
@@ -20,10 +20,9 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 if ( defined( 'SCRIPT_DEBUG' ) && TRUE == SCRIPT_DEBUG ) {
     define( 'LAYERS_UPDATER_VER', rand( 0 , 100 ) );
 } else {
-    define( 'LAYERS_UPDATER_VER', '1.0-beta' );
+    define( 'LAYERS_UPDATER_VER', '1.0.0' );
 }
 
-define( 'LAYERS_UPDATER_REMOTE_URL' , 'vagrant.localhost/api/v1' );
 define( 'LAYERS_UPDATER_SLUG' , 'layer-updater' );
 define( 'LAYERS_UPDATER_DIR' , plugin_dir_path( __FILE__ ) );
 define( 'LAYERS_UPDATER_URI' , plugin_dir_url( __FILE__ ) );
@@ -31,9 +30,6 @@ define( 'LAYERS_UPDATER_URI' , plugin_dir_url( __FILE__ ) );
 if( !function_exists( 'layer_updater_init' ) ) {
     // Instantiate Plugin
     function layer_updater_init() {
-
-        // Check for the existance of the Layers Options Panel class
-        if( !class_exists( 'Layers_Options_Panel' ) ) return false;
 
         // Load plugin class files
         $included = require_once( 'includes/class-updater.php' );

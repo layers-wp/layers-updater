@@ -9,9 +9,12 @@
 
 class Layers_Updater {
 
-    const LAYERS_API_REMOTE_URL = 'oboxthemes.com';
+    const LAYERS_API_REMOTE_URL = 'oboxthemes.com/api/v1';
 
     private static $instance;
+
+    private $theme_checks_done;
+    private $plugin_checks_done;
 
     /**
     *  Initiator
@@ -89,9 +92,11 @@ class Layers_Updater {
 
     private function _do_api_call( $endpoint = 'verify', $apikey = NULL, $return_array = true ) {
 
+        global $layers_api_call;
+
         $api_param = ( NULL != $apikey ? '?apikey=' . $apikey : '' );
 
-        $api_call = wp_remote_get(
+        $layers_api_call = wp_remote_get(
             'http://' . self::LAYERS_API_REMOTE_URL . '/' . $endpoint . $api_param,
             array(
                     'timeout' => 60,
@@ -99,9 +104,9 @@ class Layers_Updater {
                 )
         );
 
-        if( is_wp_error( $api_call ) ) return NULL;
+        if( is_wp_error( $layers_api_call ) ) return NULL;
 
-        $body_as_array = json_decode( $api_call['body'], $return_array );
+        $body_as_array = json_decode( $layers_api_call['body'], $return_array );
 
         return $body_as_array;
     }
@@ -114,9 +119,7 @@ class Layers_Updater {
 
         global $layers_api_key;
 
-        if( !isset( $layers_api_key ) ){
-            $layers_api_key = get_option( 'layers_api_key' );
-        }
+        $layers_api_key = '41f1f19176d383480afa65d325c06ed0';
 
         return $layers_api_key;
     }
@@ -130,7 +133,7 @@ class Layers_Updater {
         // Get data
         $response = $this->_do_api_call( 'updates', $this->_get_api_key(), true );
 
-        die( print_r( $response , true ) );
+        $this->checks_done = true;
 
         // If the response is not successful do nothing, just return; @TODO: Add a messaging system hook in
         if( NULL == $response ) return;
@@ -171,10 +174,26 @@ class Layers_Updater {
     }
 
     /**
+    *  Get Theme Version
+    */
+
+    private function get_theme_version( $slug = NULL ){
+
+        if( NULL == $slug ) return;
+
+        $theme = wp_get_theme( $slug );
+
+        return $theme->get( 'Version' );
+    }
+
+    /**
     *  Add available Theme Updates to the theme_updates transient
     */
 
     public function transient_theme_updates( $theme_data ) {
+
+        if( true == $this->theme_checks_done ) return;
+
         // Get an array of existing themes
         $existing_themes = wp_get_themes();
 
@@ -185,6 +204,9 @@ class Layers_Updater {
         if ( isset( $data[ 'themes' ] ) ) {
 
             foreach ( $data[ 'themes' ] AS $key => $t ) {
+
+                // if the current version is ahead or equal to the 'new' version, do nothing
+                if( $this->get_theme_version( $key ) >= $t[ 'version' ] ) continue;
 
                 // Be sure that we have this theme installed
                 if( !array_key_exists( $key, $existing_themes ) ) continue;
@@ -205,20 +227,41 @@ class Layers_Updater {
         foreach( $available_plugins as $slug => $details ){
             $plugin = explode( '/', $slug );
             $base = $plugin[0];
-            if( !isset( $plugin[1] ) ) {
-                $plugin_slug = $file;
-                break;
-            } else {
-                $file = $plugin[1];
 
-                if( $base == $plugin_slug_to_find ) {
+            if( $base == $plugin_slug_to_find ) {
+                if( !isset( $plugin[1] ) ) {
+                    $plugin_slug = $plugin[0];
+                    break;
+                } else {
+                    $file = $plugin[1];
                     $plugin_slug = $base . '/' . $file;
                     break;
                 }
             }
         }
 
-        return $plugin_slug;
+        if( isset( $plugin_slug ) ) {
+            return $plugin_slug;
+        } else {
+            return NULL;
+        }
+    }
+
+    /**
+    *  Get Plugin Version
+    */
+
+    private function get_plugin_version( $available_plugins = NULL, $slug = NULL ){
+
+        if( NULL == $slug ) return;
+
+        if( NULL == $available_plugins ) return;
+
+        if( isset( $available_plugins[ $slug ][ 'Version' ] ) ) {
+            return $available_plugins[ $slug ][ 'Version' ];
+        } else {
+            return NULL;
+        }
     }
 
     /**
@@ -227,10 +270,8 @@ class Layers_Updater {
 
    public function transient_plugin_updates( $plugin_data ) {
 
-        // Check if we've already done this check
-        if ( empty( $plugin_data->checked ) ) {
-            //return $plugin_data;
-        }
+        if( true == $this->plugin_checks_done ) return;
+
         // Update API Data
         $data = $this->_get_available_updates( 'plugins' );
 
@@ -247,6 +288,9 @@ class Layers_Updater {
 
                 // Make sure that we have this plugin installed
                 if( !$plugin_slug ) continue;
+
+                // if the current version is ahead or equal to the 'new' version, do nothing
+                if(  $this->get_plugin_version( $available_plugins, $plugin_slug) >= $p->update->new_version ) continue;
 
                 $plugin_data->response[ $plugin_slug ]->package = $p->update->package;
                 $plugin_data->response[ $plugin_slug ]->new_version = $p->update->new_version;
