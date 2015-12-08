@@ -200,7 +200,6 @@ class Layers_Updater {
         // Update API Data
         $data = $this->_get_available_updates();
 
-
         // Loop over plugins looking for the latest version
         if ( isset( $data[ 'themes' ] ) ) {
             foreach ( $data[ 'themes' ] AS $key => $t ) {
@@ -290,6 +289,7 @@ class Layers_Updater {
                 if( !$plugin_slug ) continue;
 
                 // if the current version is ahead or equal to the 'new' version, do nothing
+
                 if( (bool) version_compare( $this->get_plugin_version( $available_plugins, $plugin_slug), $p->update->new_version, '>=' ) ) continue;
 
                 $plugin_data->response[ $plugin_slug ]->package = $p->update->package;
