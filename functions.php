@@ -1,5 +1,6 @@
 <?php /*
  * Plugin Name: Layers - Updater
+
  * Version: 1.3
  * Plugin URI: http://www.oboxthemes.com
  * Description: This plugin makes sure that your Layers Themes & Extensions are always up to date
